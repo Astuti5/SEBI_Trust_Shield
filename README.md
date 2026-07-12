@@ -166,8 +166,6 @@ Currently Working On:
 
 Astuti Kumari
 
-Mody University of Science and Technology
-
 ---
 
 <div align="center">
