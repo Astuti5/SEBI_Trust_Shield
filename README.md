@@ -87,18 +87,22 @@ Low / Medium / High Risk
        │
        ▼
 Reasons + Recommended Action
+
 # 👥 Team
 
-**Team Recon**
+### **Team Recon**
 
-Astuti Kumari
+**Astuti Kumari**  
+*Mody University of Science & Technology*
 
 ---
 
 <div align="center">
 
-### ⭐ Building trust in digital financial communications.
+### 🛡️ Building trust in digital financial communications.
 
-*Prototype under active development.*
+**Detect the Fake. Authenticate the Real.**
+
+*Working prototype developed for Securities Market TechSprint 2026.*
 
 </div>
