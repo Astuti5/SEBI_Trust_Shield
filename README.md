@@ -13,7 +13,11 @@
 
 **Securities Market TechSprint 2026**
 
-[🚀 Demo](#-demo) •
+**Securities Market TechSprint 2026**
+
+🌐 **[Live Demo](https://sebitrustshield111.vercel.app/)**
+
+[🚀 Demo](#demo) •
 [✨ Features](#-features) •
 [🏗️ Architecture](#️-architecture) •
 [🔐 Security](#-security) •
@@ -87,6 +91,9 @@ Low / Medium / High Risk
        │
        ▼
 Reasons + Recommended Action
+```
+
+---
 
 # 👥 Team
 
