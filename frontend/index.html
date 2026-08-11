@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SEBI Trust Shield — Verification Console</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root{
+    --ink:#0B1220;
+    --ink-soft:#1B2436;
+    --paper:#F6F5F1;
+    --paper-dim:#EAE8E1;
+    --verify:#1D4ED8;
+    --verify-dim:#93B4F5;
+    --risk:#DC2626;
+    --safe:#15803D;
+    --amber:#B45309;
+    --line: rgba(11,18,32,0.12);
+  }
+
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; }
+  }
+
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', system-ui, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .mono{ font-family:'IBM Plex Mono', ui-monospace, monospace; }
+  a{ color:inherit; }
+  .sr-only{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; }
+
+  /* ---------- Top bar ---------- */
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:20px 32px;
+    border-bottom:1px solid var(--line);
+    gap:16px; flex-wrap:wrap;
+  }
+  .brand{
+    display:flex; align-items:center; gap:10px;
+    font-weight:700; font-size:17px; letter-spacing:-0.01em;
+  }
+  .brand .mark{
+    width:26px; height:26px;
+    background:var(--ink);
+    display:flex; align-items:center; justify-content:center;
+    color:var(--paper); font-size:13px; font-weight:700;
+    clip-path: polygon(50% 0%, 100% 20%, 100% 60%, 50% 100%, 0% 60%, 0% 20%);
+    flex-shrink:0;
+  }
+  .header-right{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .status-pill{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px; letter-spacing:0.06em; text-transform:uppercase;
+    display:flex; align-items:center; gap:8px;
+    padding:6px 12px;
+    border:1px solid var(--line);
+    color:var(--ink-soft);
+    background:none;
+    cursor:pointer;
+  }
+  .status-pill:hover{ border-color:var(--ink); }
+  .status-pill:focus-visible{ outline:2px solid var(--verify); outline-offset:2px; }
+  .status-dot{ width:7px; height:7px; border-radius:50%; background:var(--amber); flex-shrink:0; }
+  .status-dot.online{ background:var(--safe); }
+  .status-dot.offline{ background:var(--risk); }
+  .status-dot.checking{ animation:pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:0.35; } }
+
+  .api-config{
+    display:none;
+    align-items:center; gap:6px;
+  }
+  .api-config.open{ display:flex; }
+  .api-config input{
+    font-family:'IBM Plex Mono', monospace; font-size:11px;
+    padding:5px 8px; border:1px solid var(--line); background:var(--paper);
+    color:var(--ink); width:190px;
+  }
+  .api-config button{
+    font-family:'IBM Plex Mono', monospace; font-size:11px;
+    padding:6px 10px; border:1px solid var(--ink); background:var(--ink); color:var(--paper);
+    cursor:pointer;
+  }
+
+  /* ---------- Hero ---------- */
+  .hero{
+    padding:56px 32px 40px;
+    max-width:1180px; margin:0 auto;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px; letter-spacing:0.12em; text-transform:uppercase;
+    color:var(--verify); margin-bottom:14px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .eyebrow::before{ content:''; width:16px; height:1px; background:var(--verify); }
+
+  h1{
+    font-size:clamp(32px, 4.4vw, 52px);
+    line-height:1.04; letter-spacing:-0.02em;
+    margin:0 0 18px; font-weight:700;
+    max-width:15ch;
+  }
+  h1 em{ font-style:normal; color:var(--verify); }
+
+  .lede{
+    font-size:17px; line-height:1.6; color:var(--ink-soft);
+    max-width:56ch; margin:0;
+  }
+
+  /* ---------- Console ---------- */
+  .console-wrap{
+    max-width:1180px; margin:0 auto;
+    padding:0 32px 40px;
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:28px;
+    align-items:start;
+  }
+  @media (max-width: 880px){
+    .console-wrap{ grid-template-columns:1fr; }
+  }
+
+  .panel{
+    background:var(--ink);
+    color:var(--paper);
+    padding:0;
+    position:relative;
+  }
+  .panel-head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 20px;
+    border-bottom:1px solid rgba(246,245,241,0.14);
+  }
+  .panel-head .dots{ display:flex; gap:6px; }
+  .panel-head .dots span{ width:8px; height:8px; border-radius:50%; background:rgba(246,245,241,0.25); }
+  .panel-title{
+    font-family:'IBM Plex Mono', monospace; font-size:12px;
+    letter-spacing:0.08em; text-transform:uppercase; color:rgba(246,245,241,0.6);
+  }
+
+  .tabs{ display:flex; border-bottom:1px solid rgba(246,245,241,0.14); }
+  .tab{
+    flex:1; padding:13px 16px; text-align:center;
+    font-family:'IBM Plex Mono', monospace; font-size:12.5px;
+    letter-spacing:0.03em; cursor:pointer; background:transparent;
+    border:none; color:rgba(246,245,241,0.5);
+    border-right:1px solid rgba(246,245,241,0.14);
+  }
+  .tab:last-child{ border-right:none; }
+  .tab.active{ color:var(--paper); background:rgba(246,245,241,0.06); }
+  .tab:focus-visible{ outline:2px solid var(--verify-dim); outline-offset:-2px; }
+
+  .console-body{ padding:24px 20px 20px; }
+
+  label{
+    display:block; font-family:'IBM Plex Mono', monospace;
+    font-size:11px; letter-spacing:0.08em; text-transform:uppercase;
+    color:rgba(246,245,241,0.55); margin-bottom:10px;
+  }
+
+  .url-row{ display:flex; gap:0; margin-bottom:6px; }
+  input[type="text"]{
+    flex:1; background:rgba(246,245,241,0.06);
+    border:1px solid rgba(246,245,241,0.18);
+    color:var(--paper); padding:13px 14px;
+    font-family:'IBM Plex Mono', monospace; font-size:14px;
+  }
+  input[type="text"]::placeholder{ color:rgba(246,245,241,0.32); }
+  input[type="text"]:focus-visible{ outline:2px solid var(--verify-dim); outline-offset:2px; }
+
+  .dropzone{
+    border:1px dashed rgba(246,245,241,0.28);
+    padding:28px 16px; text-align:center;
+    font-family:'IBM Plex Mono', monospace; font-size:13px;
+    color:rgba(246,245,241,0.55); cursor:pointer;
+    transition:border-color 0.15s ease, background 0.15s ease;
+  }
+  .dropzone:hover, .dropzone.drag{
+    border-color:var(--verify-dim); background:rgba(29,78,216,0.08);
+  }
+  .dropzone input{ display:none; }
+  .dropzone:focus-visible{ outline:2px solid var(--verify-dim); outline-offset:2px; }
+
+  .preview-card{
+    display:none;
+    align-items:center; gap:12px;
+    border:1px solid rgba(246,245,241,0.18);
+    padding:10px; margin-top:2px;
+  }
+  .preview-card.show{ display:flex; }
+  .preview-card img{
+    width:52px; height:52px; object-fit:cover;
+    border:1px solid rgba(246,245,241,0.18); flex-shrink:0; background:#000;
+  }
+  .preview-meta{ flex:1; min-width:0; }
+  .preview-name{
+    font-family:'IBM Plex Mono', monospace; font-size:12.5px; color:var(--paper);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .preview-size{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:rgba(246,245,241,0.45); margin-top:2px; }
+  .preview-remove{
+    background:none; border:1px solid rgba(246,245,241,0.28); color:rgba(246,245,241,0.7);
+    font-family:'IBM Plex Mono', monospace; font-size:11px; padding:6px 10px; cursor:pointer; flex-shrink:0;
+  }
+  .preview-remove:hover{ border-color:var(--risk); color:var(--risk); }
+
+  .scan-btn{
+    width:100%; margin-top:16px;
+    background:var(--verify); color:#fff; border:none;
+    padding:14px 16px; font-weight:600; font-size:14.5px;
+    cursor:pointer; letter-spacing:0.01em;
+    display:flex; align-items:center; justify-content:center; gap:10px;
+    transition:background 0.15s ease;
+  }
+  .scan-btn:hover{ background:#1740b0; }
+  .scan-btn:disabled{ background:rgba(246,245,241,0.15); color:rgba(246,245,241,0.4); cursor:not-allowed; }
+  .scan-btn:focus-visible{ outline:2px solid var(--verify-dim); outline-offset:2px; }
+
+  .spinner{
+    width:14px; height:14px; border-radius:50%;
+    border:2px solid rgba(255,255,255,0.35); border-top-color:#fff;
+    animation:spin 0.7s linear infinite; display:none;
+  }
+  .scan-btn.loading .spinner{ display:inline-block; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .hint{
+    font-family:'IBM Plex Mono', monospace; font-size:11.5px;
+    color:rgba(246,245,241,0.4); margin-top:14px; line-height:1.6;
+  }
+  .hint button{
+    background:none; border:none; color:var(--verify-dim);
+    text-decoration:underline; cursor:pointer; font:inherit; padding:0;
+  }
+  .hint button:focus-visible{ outline:2px solid var(--verify-dim); outline-offset:2px; }
+
+  /* ---------- Ticket (signature element) ---------- */
+  .ticket-outer{
+    background:var(--paper);
+    border:1px solid var(--ink);
+    position:relative;
+    min-height:100%;
+  }
+  .ticket-outer::before, .ticket-outer::after{
+    content:''; position:absolute; width:18px; height:18px;
+    background:var(--paper-dim); border:1px solid var(--ink); border-radius:50%;
+    top:50%; transform:translateY(-50%);
+  }
+  .ticket-outer::before{ left:-10px; }
+  .ticket-outer::after{ right:-10px; }
+  @media (max-width: 880px){ .ticket-outer::before, .ticket-outer::after{ display:none; } }
+
+  .ticket-head{
+    padding:18px 22px;
+    border-bottom:1px dashed var(--line);
+    display:flex; justify-content:space-between; align-items:baseline;
+  }
+  .ticket-head .label{
+    font-family:'IBM Plex Mono', monospace; font-size:11px;
+    letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-soft);
+  }
+  .ticket-head .serial{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--ink-soft); }
+
+  .ticket-body{ padding:26px 22px; min-height:320px; }
+
+  .ticket-empty{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    height:280px; text-align:center; color:var(--ink-soft);
+  }
+  .ticket-empty .glyph{ font-size:28px; margin-bottom:10px; opacity:0.5; }
+  .ticket-empty p{ font-family:'IBM Plex Mono', monospace; font-size:12.5px; max-width:32ch; line-height:1.6; }
+
+  .ticket-loading{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    height:280px; text-align:center; color:var(--ink-soft); gap:14px;
+  }
+  .ticket-loading .ring{
+    width:34px; height:34px; border-radius:50%;
+    border:3px solid var(--paper-dim); border-top-color:var(--verify);
+    animation:spin 0.8s linear infinite;
+  }
+  .ticket-loading p{ font-family:'IBM Plex Mono', monospace; font-size:12px; }
+
+  .verdict-row{ display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:22px; }
+  .verdict-badge{
+    font-family:'IBM Plex Mono', monospace; font-weight:600; font-size:13px;
+    letter-spacing:0.04em; text-transform:uppercase;
+    padding:7px 14px; border:1px solid currentColor;
+  }
+  .verdict-badge.Low{ color:var(--safe); }
+  .verdict-badge.Medium{ color:var(--amber); }
+  .verdict-badge.High{ color:var(--risk); }
+
+  .copy-btn{
+    background:none; border:1px solid var(--line); color:var(--ink-soft);
+    font-family:'IBM Plex Mono', monospace; font-size:11px; padding:6px 10px; cursor:pointer;
+  }
+  .copy-btn:hover{ border-color:var(--ink); color:var(--ink); }
+  .copy-btn:focus-visible{ outline:2px solid var(--verify); outline-offset:2px; }
+
+  .verdict-score{ font-family:'IBM Plex Mono', monospace; font-size:32px; font-weight:600; letter-spacing:-0.02em; }
+  .verdict-score span{ font-size:15px; color:var(--ink-soft); font-weight:400; }
+
+  .meter{
+    height:6px; background:var(--paper-dim); margin-bottom:24px; position:relative; overflow:hidden;
+  }
+  .meter-fill{ height:100%; width:0; transition:width 0.6s cubic-bezier(.2,.8,.2,1); }
+  .meter-fill.Low{ background:var(--safe); }
+  .meter-fill.Medium{ background:var(--amber); }
+  .meter-fill.High{ background:var(--risk); }
+
+  .field-row{
+    display:flex; justify-content:space-between; gap:12px;
+    padding:9px 0; border-bottom:1px solid var(--line);
+    font-size:13.5px;
+  }
+  .field-row .k{ color:var(--ink-soft); }
+  .field-row .v{ font-family:'IBM Plex Mono', monospace; text-align:right; }
+
+  .reasons{ margin-top:22px; }
+  .reasons .h{
+    font-family:'IBM Plex Mono', monospace; font-size:11px;
+    letter-spacing:0.08em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:10px;
+  }
+  .reasons ul{ margin:0; padding:0; list-style:none; }
+  .reasons li{
+    font-size:13.5px; line-height:1.55; padding:8px 0 8px 18px;
+    position:relative; border-bottom:1px solid var(--line);
+  }
+  .reasons li::before{ content:'—'; position:absolute; left:0; color:var(--ink-soft); }
+
+  .ticket-foot{
+    padding:14px 22px; border-top:1px dashed var(--line);
+    font-family:'IBM Plex Mono', monospace; font-size:10.5px; color:var(--ink-soft);
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px;
+  }
+
+  .err-box{
+    border:1px solid var(--risk); color:var(--risk);
+    padding:14px 16px; font-family:'IBM Plex Mono', monospace; font-size:13px;
+    line-height:1.5; margin-top:16px; display:none;
+  }
+  .err-box.show{ display:block; }
+
+  /* ---------- History ---------- */
+  .history-wrap{
+    max-width:1180px; margin:0 auto; padding:0 32px 80px;
+  }
+  .history-head{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:14px;
+  }
+  .history-head h2{
+    font-family:'IBM Plex Mono', monospace; font-size:12px;
+    letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-soft); margin:0;
+  }
+  .history-head button{
+    background:none; border:1px solid var(--line); color:var(--ink-soft);
+    font-family:'IBM Plex Mono', monospace; font-size:11px; padding:6px 10px; cursor:pointer;
+  }
+  .history-head button:hover{ border-color:var(--ink); color:var(--ink); }
+  .history-list{ display:flex; flex-direction:column; gap:8px; }
+  .history-empty{
+    font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--ink-soft);
+    border:1px dashed var(--line); padding:18px; text-align:center;
+  }
+  .history-item{
+    display:grid; grid-template-columns:96px 1fr auto auto; align-items:center; gap:14px;
+    background:#fff; border:1px solid var(--line); padding:12px 16px;
+    cursor:pointer; text-align:left; width:100%; font:inherit; color:inherit;
+  }
+  .history-item:hover{ border-color:var(--ink); }
+  .history-item:focus-visible{ outline:2px solid var(--verify); outline-offset:-2px; }
+  @media (max-width: 640px){
+    .history-item{ grid-template-columns:1fr auto; grid-template-rows:auto auto; }
+    .history-item .h-domain{ grid-column:1 / -1; }
+  }
+  .h-badge{
+    font-family:'IBM Plex Mono', monospace; font-size:10.5px; text-transform:uppercase;
+    letter-spacing:0.04em; padding:4px 8px; border:1px solid currentColor; justify-self:start;
+  }
+  .h-badge.Low{ color:var(--safe); }
+  .h-badge.Medium{ color:var(--amber); }
+  .h-badge.High{ color:var(--risk); }
+  .h-domain{
+    font-family:'IBM Plex Mono', monospace; font-size:13px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .h-score{ font-family:'IBM Plex Mono', monospace; font-size:13px; color:var(--ink-soft); }
+  .h-time{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--ink-soft); }
+
+  footer{
+    border-top:1px solid var(--line);
+    padding:22px 32px; max-width:1180px; margin:0 auto;
+    font-family:'IBM Plex Mono', monospace; font-size:11.5px;
+    color:var(--ink-soft); display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span class="mark">S</span>
+    SEBI Trust Shield
+  </div>
+  <div class="header-right">
+    <div class="api-config" id="apiConfig">
+      <input type="text" id="apiInput" class="mono" placeholder="http://127.0.0.1:8000" />
+      <button id="apiSave">Save</button>
+    </div>
+    <button class="status-pill" id="apiStatusBtn" title="Click to change the API base URL">
+      <span class="status-dot checking" id="apiDot"></span>
+      <span id="apiStatus">checking api…</span>
+    </button>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="eyebrow">Layer 1 — Detect</div>
+  <h1>Paste anything suspicious. <em>Get evidence, not a guess.</em></h1>
+  <p class="lede">
+    A URL, a QR link, or a screenshot goes in. Trust Shield runs live domain, SSL,
+    WHOIS, and language checks against SEBI's official domains and returns an
+    explainable risk verdict — never a flat yes or no.
+  </p>
+</section>
+
+<div class="console-wrap">
+
+  <!-- LEFT: input console -->
+  <div class="panel">
+    <div class="panel-head">
+      <span class="panel-title">scan_input.sh</span>
+      <div class="dots"><span></span><span></span><span></span></div>
+    </div>
+    <div class="tabs" role="tablist">
+      <button class="tab active" role="tab" id="tabUrl" aria-selected="true" aria-controls="paneUrl">Check a URL</button>
+      <button class="tab" role="tab" id="tabShot" aria-selected="false" aria-controls="paneShot">Check a screenshot</button>
+    </div>
+
+    <div class="console-body">
+      <!-- URL mode -->
+      <div id="paneUrl" role="tabpanel">
+        <label for="urlInput">Suspicious link or QR-decoded URL</label>
+        <div class="url-row">
+          <input type="text" id="urlInput" class="mono" placeholder="https://sebi-verify-login.co" autocomplete="off" spellcheck="false" />
+        </div>
+        <div class="hint">
+          Try: <button data-fill="https://sebi.gov.in" type="button">an official domain</button> ·
+          <button data-fill="https://sebi-verify-login.co" type="button">a lookalike domain</button>
+        </div>
+      </div>
+
+      <!-- Screenshot mode -->
+      <div id="paneShot" role="tabpanel" style="display:none;">
+        <label for="fileInput">Screenshot to scan</label>
+        <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Choose or drop a screenshot to scan">
+          <div>Drop an image here, or click to choose one</div>
+          <div style="margin-top:4px; opacity:0.6;">PNG, JPEG, or WEBP · up to 10MB</div>
+          <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp" />
+        </div>
+        <div class="preview-card" id="previewCard">
+          <img id="previewImg" alt="Selected screenshot preview" />
+          <div class="preview-meta">
+            <div class="preview-name" id="previewName"></div>
+            <div class="preview-size" id="previewSize"></div>
+          </div>
+          <button type="button" class="preview-remove" id="previewRemove">Remove</button>
+        </div>
+        <label for="claimedUrl" style="margin-top:16px;">Claimed source URL (optional)</label>
+        <div class="url-row">
+          <input type="text" id="claimedUrl" class="mono" placeholder="https://sebi.gov.in" autocomplete="off" spellcheck="false" />
+        </div>
+      </div>
+
+      <button class="scan-btn" id="scanBtn" type="button">
+        <span class="spinner"></span>
+        <span id="scanBtnLabel">Run verification</span>
+      </button>
+
+      <div class="err-box" id="errBox" role="alert"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT: ticket -->
+  <div class="ticket-outer">
+    <div class="ticket-head">
+      <span class="label">Verification Ticket</span>
+      <span class="serial mono" id="serial">STS-000000</span>
+    </div>
+    <div class="ticket-body" id="ticketBody" aria-live="polite">
+      <div class="ticket-empty">
+        <div class="glyph">◆</div>
+        <p>No scan run yet. Results appear here with a Low / Medium / High verdict and the exact signals behind it.</p>
+      </div>
+    </div>
+    <div class="ticket-foot">
+      <span id="ticketMode">awaiting input</span>
+      <span id="ticketTime">—</span>
+    </div>
+  </div>
+
+</div>
+
+<div class="history-wrap" id="historyWrap" style="display:none;">
+  <div class="history-head">
+    <h2>Scan history — this session</h2>
+    <button type="button" id="clearHistory">Clear</button>
+  </div>
+  <div class="history-list" id="historyList"></div>
+</div>
+
+<footer>
+  <span>SEBI Trust Shield · Team Recon · Securities Market TechSprint 2026</span>
+  <span>API base: <span class="mono" id="apiBaseLabel">http://127.0.0.1:8000</span></span>
+</footer>
+
+<script>
+(function(){
+  const DEFAULT_API = 'http://127.0.0.1:8000';
+  let API_BASE = window.TRUST_SHIELD_API || localStorage.getItem('ts_api_base') || DEFAULT_API;
+
+  const apiBaseLabel = document.getElementById('apiBaseLabel');
+  const apiStatusBtn = document.getElementById('apiStatusBtn');
+  const apiConfig = document.getElementById('apiConfig');
+  const apiInput = document.getElementById('apiInput');
+  const apiSave = document.getElementById('apiSave');
+  const dot = document.getElementById('apiDot');
+  const statusEl = document.getElementById('apiStatus');
+
+  const tabUrl = document.getElementById('tabUrl');
+  const tabShot = document.getElementById('tabShot');
+  const paneUrl = document.getElementById('paneUrl');
+  const paneShot = document.getElementById('paneShot');
+  const urlInput = document.getElementById('urlInput');
+  const claimedUrl = document.getElementById('claimedUrl');
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+  const previewCard = document.getElementById('previewCard');
+  const previewImg = document.getElementById('previewImg');
+  const previewName = document.getElementById('previewName');
+  const previewSize = document.getElementById('previewSize');
+  const previewRemove = document.getElementById('previewRemove');
+  const scanBtn = document.getElementById('scanBtn');
+  const scanBtnLabel = document.getElementById('scanBtnLabel');
+  const errBox = document.getElementById('errBox');
+  const ticketBody = document.getElementById('ticketBody');
+  const ticketMode = document.getElementById('ticketMode');
+  const ticketTime = document.getElementById('ticketTime');
+  const serial = document.getElementById('serial');
+  const historyWrap = document.getElementById('historyWrap');
+  const historyList = document.getElementById('historyList');
+  const clearHistoryBtn = document.getElementById('clearHistory');
+
+  let mode = 'url';
+  let selectedFile = null;
+  let lastResult = null;
+  let history = [];
+
+  function updateApiBaseLabel(){ apiBaseLabel.textContent = API_BASE; apiInput.value = API_BASE; }
+  updateApiBaseLabel();
+
+  // ---- API health check ----
+  async function checkHealth(){
+    dot.className = 'status-dot checking';
+    statusEl.textContent = 'checking api…';
+    try{
+      const controller = new AbortController();
+      const t = setTimeout(() => controller.abort(), 5000);
+      const r = await fetch(API_BASE + '/health', { method:'GET', signal: controller.signal });
+      clearTimeout(t);
+      if(!r.ok) throw new Error();
+      dot.className = 'status-dot online';
+      statusEl.textContent = 'api online';
+    }catch(e){
+      dot.className = 'status-dot offline';
+      statusEl.textContent = 'api unreachable';
+    }
+  }
+  checkHealth();
+
+  apiStatusBtn.addEventListener('click', () => {
+    apiConfig.classList.toggle('open');
+    if(apiConfig.classList.contains('open')) apiInput.focus();
+  });
+  apiSave.addEventListener('click', () => {
+    const val = apiInput.value.trim().replace(/\/$/, '');
+    if(!val) return;
+    API_BASE = val;
+    localStorage.setItem('ts_api_base', API_BASE);
+    updateApiBaseLabel();
+    apiConfig.classList.remove('open');
+    checkHealth();
+  });
+  apiInput.addEventListener('keydown', e => { if(e.key === 'Enter') apiSave.click(); });
+
+  // ---- Tabs ----
+  function setMode(next){
+    mode = next;
+    tabUrl.classList.toggle('active', mode === 'url');
+    tabShot.classList.toggle('active', mode === 'shot');
+    tabUrl.setAttribute('aria-selected', mode === 'url');
+    tabShot.setAttribute('aria-selected', mode === 'shot');
+    paneUrl.style.display = mode === 'url' ? 'block' : 'none';
+    paneShot.style.display = mode === 'shot' ? 'block' : 'none';
+    scanBtnLabel.textContent = mode === 'url' ? 'Run verification' : 'Scan screenshot';
+    hideError();
+  }
+  tabUrl.addEventListener('click', () => setMode('url'));
+  tabShot.addEventListener('click', () => setMode('shot'));
+
+  // ---- Quick-fill hints ----
+  document.querySelectorAll('[data-fill]').forEach(btn => {
+    btn.addEventListener('click', () => { urlInput.value = btn.getAttribute('data-fill'); urlInput.focus(); });
+  });
+  urlInput.addEventListener('keydown', e => { if(e.key === 'Enter') scanBtn.click(); });
+
+  // ---- Dropzone ----
+  dropzone.addEventListener('click', () => fileInput.click());
+  dropzone.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); fileInput.click(); } });
+  ['dragenter','dragover'].forEach(evt => dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.add('drag'); }));
+  ['dragleave','drop'].forEach(evt => dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.remove('drag'); }));
+  dropzone.addEventListener('drop', e => {
+    const f = e.dataTransfer.files[0];
+    if(f) setFile(f);
+  });
+  fileInput.addEventListener('change', () => { if(fileInput.files[0]) setFile(fileInput.files[0]); });
+
+  function setFile(f){
+    if(!/^image\/(png|jpeg|webp)$/.test(f.type)){
+      showError('That file type is not supported. Upload a PNG, JPEG, or WEBP image.');
+      return;
+    }
+    if(f.size > 10 * 1024 * 1024){
+      showError('Image is too large — 10MB max.');
+      return;
+    }
+    hideError();
+    selectedFile = f;
+    previewName.textContent = f.name;
+    previewSize.textContent = formatBytes(f.size);
+    const reader = new FileReader();
+    reader.onload = () => { previewImg.src = reader.result; };
+    reader.readAsDataURL(f);
+    previewCard.classList.add('show');
+  }
+  previewRemove.addEventListener('click', () => {
+    selectedFile = null;
+    fileInput.value = '';
+    previewCard.classList.remove('show');
+    previewImg.src = '';
+  });
+
+  function formatBytes(n){
+    if(n < 1024) return n + ' B';
+    if(n < 1024*1024) return (n/1024).toFixed(1) + ' KB';
+    return (n/(1024*1024)).toFixed(1) + ' MB';
+  }
+
+  function hideError(){ errBox.classList.remove('show'); errBox.textContent = ''; }
+  function showError(msg){ errBox.textContent = msg; errBox.classList.add('show'); }
+
+  function setLoading(loading){
+    scanBtn.disabled = loading;
+    scanBtn.classList.toggle('loading', loading);
+    scanBtnLabel.textContent = loading ? 'Scanning…' : (mode === 'url' ? 'Run verification' : 'Scan screenshot');
+  }
+
+  function showTicketLoading(){
+    ticketBody.innerHTML = `
+      <div class="ticket-loading">
+        <div class="ring"></div>
+        <p>Running live checks…</p>
+      </div>
+    `;
+  }
+
+  scanBtn.addEventListener('click', async () => {
+    hideError();
+    if(mode === 'url'){
+      const url = urlInput.value.trim();
+      if(!url){ showError('Enter a URL to check.'); return; }
+      setLoading(true);
+      showTicketLoading();
+      try{
+        const res = await fetch(`${API_BASE}/check-url?url=${encodeURIComponent(url)}`);
+        const data = await safeJson(res);
+        if(!res.ok) throw new Error(apiErrorMessage(res, data));
+        renderTicket(data, 'url');
+      }catch(e){
+        renderTicketError();
+        showError(networkErrorMessage(e));
+      }finally{ setLoading(false); }
+    } else {
+      if(!selectedFile){ showError('Choose a screenshot to scan.'); return; }
+      setLoading(true);
+      showTicketLoading();
+      try{
+        const fd = new FormData();
+        fd.append('file', selectedFile);
+        if(claimedUrl.value.trim()) fd.append('claimed_url', claimedUrl.value.trim());
+        const res = await fetch(`${API_BASE}/check-screenshot`, { method:'POST', body: fd });
+        const data = await safeJson(res);
+        if(!res.ok) throw new Error(apiErrorMessage(res, data));
+        renderTicket(data, 'screenshot');
+      }catch(e){
+        renderTicketError();
+        showError(networkErrorMessage(e));
+      }finally{ setLoading(false); }
+    }
+  });
+
+  async function safeJson(res){
+    try{ return await res.json(); }catch(e){ return null; }
+  }
+
+  function apiErrorMessage(res, data){
+    if(data && data.detail) return typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail);
+    if(res.status === 429) return 'Rate limit exceeded — wait a moment and try again.';
+    if(res.status === 503) return 'A required backend dependency is unavailable (check OCR install).';
+    return `Check failed (HTTP ${res.status}).`;
+  }
+
+  function networkErrorMessage(e){
+    if(e instanceof TypeError) return `Could not reach the verification API at ${API_BASE}. Is the backend running?`;
+    return e.message || 'Something went wrong running the check.';
+  }
+
+  function renderTicketError(){
+    ticketBody.innerHTML = `
+      <div class="ticket-empty">
+        <div class="glyph">!</div>
+        <p>The check could not complete. See the message below the console, fix it, and run again.</p>
+      </div>
+    `;
+  }
+
+  function renderTicket(data, kind){
+    lastResult = data;
+    const nowIso = new Date().toISOString();
+    serial.textContent = 'STS-' + String(Date.now()).slice(-6);
+    ticketMode.textContent = kind === 'url' ? 'source: url check' : 'source: screenshot check';
+    ticketTime.textContent = new Date().toLocaleTimeString();
+
+    const level = data.risk_level || 'Low';
+    const pct = Math.round((data.risk_score || 0) * 100);
+
+    const signalRows = Object.entries(data.signals || {}).map(([k,v]) => `
+      <div class="field-row">
+        <span class="k">${escapeHtml(k.replace(/_/g,' '))}</span>
+        <span class="v">${typeof v === 'boolean' ? (v ? 'true' : 'false') : escapeHtml(String(v))}</span>
+      </div>
+    `).join('');
+
+    const reasons = (data.reasons || []).map(r => `<li>${escapeHtml(r)}</li>`).join('') || '<li>No specific signals returned.</li>';
+
+    ticketBody.innerHTML = `
+      <div class="verdict-row">
+        <span class="verdict-badge ${level}">${level} risk</span>
+        <button type="button" class="copy-btn" id="copyBtn">Copy result</button>
+      </div>
+      <div class="verdict-score">${pct}<span>/100 risk score</span></div>
+      <div class="meter"><div class="meter-fill ${level}" id="meterFill" style="width:0%"></div></div>
+      <div class="field-row"><span class="k">domain</span><span class="v">${escapeHtml(data.domain || '—')}</span></div>
+      ${signalRows}
+      <div class="reasons">
+        <div class="h">Why this verdict</div>
+        <ul>${reasons}</ul>
+      </div>
+    `;
+    requestAnimationFrame(() => {
+      const fill = document.getElementById('meterFill');
+      if(fill) fill.style.width = pct + '%';
+    });
+
+    document.getElementById('copyBtn').addEventListener('click', async () => {
+      const summary = buildSummary(data, kind);
+      try{
+        await navigator.clipboard.writeText(summary);
+        const btn = document.getElementById('copyBtn');
+        const original = btn.textContent;
+        btn.textContent = 'Copied';
+        setTimeout(() => { btn.textContent = original; }, 1500);
+      }catch(e){ /* clipboard unavailable — silently ignore */ }
+    });
+
+    addToHistory({ ...data, kind, ts: nowIso, serial: serial.textContent });
+  }
+
+  function buildSummary(data, kind){
+    const lines = [
+      `SEBI Trust Shield — ${kind === 'url' ? 'URL' : 'Screenshot'} check`,
+      `Domain: ${data.domain || '—'}`,
+      `Risk: ${data.risk_level} (${Math.round((data.risk_score||0)*100)}/100)`,
+      'Reasons:',
+      ...(data.reasons || []).map(r => `  - ${r}`),
+    ];
+    return lines.join('\n');
+  }
+
+  // ---- History ----
+  function addToHistory(entry){
+    history.unshift(entry);
+    if(history.length > 12) history = history.slice(0, 12);
+    renderHistory();
+  }
+  function renderHistory(){
+    if(history.length === 0){
+      historyWrap.style.display = 'none';
+      return;
+    }
+    historyWrap.style.display = 'block';
+    historyList.innerHTML = history.map((h, i) => `
+      <button type="button" class="history-item" data-idx="${i}">
+        <span class="h-badge ${h.risk_level}">${h.risk_level}</span>
+        <span class="h-domain mono">${escapeHtml(h.domain || (h.kind === 'screenshot' ? 'screenshot scan' : '—'))}</span>
+        <span class="h-score">${Math.round((h.risk_score||0)*100)}/100</span>
+        <span class="h-time">${new Date(h.ts).toLocaleTimeString()}</span>
+      </button>
+    `).join('');
+    historyList.querySelectorAll('.history-item').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.getAttribute('data-idx'), 10);
+        const h = history[idx];
+        serial.textContent = h.serial;
+        ticketMode.textContent = h.kind === 'url' ? 'source: url check (from history)' : 'source: screenshot check (from history)';
+        ticketTime.textContent = new Date(h.ts).toLocaleTimeString();
+        renderTicket(h, h.kind);
+      });
+    });
+  }
+  clearHistoryBtn.addEventListener('click', () => { history = []; renderHistory(); });
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+  }
+
+  setMode('url');
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,14 @@
+# REAL, sourced entries — not fabricated. Pulled from a published investor-protection
+# article (Angel One, "List of Fake Websites and Apps of Listed Companies", 4 Aug 2025),
+# which itself cites an NSE investor-complaint-based circular reporting 656 total
+# flagged fake websites/links/app names. Only the 4 concrete domain examples named
+# in that article are listed here — the remaining ~652 are not reproduced because
+# they were not individually named in the source; do not treat this file as
+# exhaustive. Verify current status before relying on it; scam domains get taken
+# down and new ones appear constantly.
+fake_domain,impersonates,description,source
+mcxliveresearch.in,Multi Commodity Exchange of India (MCX),"Presents itself as a research/advisory platform, no official connection to MCX",Angel One / NSE investor circular (see datasets/metadata/sources.md)
+paytmmoney.top,Paytm Money,Misleading URL crafted to look like the legitimate Paytm Money platform,Angel One / NSE investor circular
+kotaksecurities.zerodhaweb.com,Kotak Securities + Zerodha,Combines both brokerage names into one deceptive domain,Angel One / NSE investor circular
+hdfcsec.xyz,HDFC Securities,Falsely uses the HDFC Securities name on an unofficial .xyz domain,Angel One / NSE investor circular
+"(656 total flagged, not individually listed)",Various listed companies and fintech brands,NSE's investor-complaint-based circular flagged 656 fake websites/links/app names in total — only 4 were named with specifics in the source article,Angel One / NSE investor circular
