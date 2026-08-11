@@ -1,49 +1,104 @@
+<div align="center">
+
+# 🛡️ SEBI Trust Shield
+
+### Detect the Fake. Authenticate the Real.
+
+**An explainable cybersecurity platform for detecting phishing, fraudulent financial communications, and suspicious investor-facing content.**
+
+[![Status](https://img.shields.io/badge/Status-Working%20Prototype-16A34A?style=for-the-badge)](https://github.com/Astuti5/SEBI_Trust_Shield)
+[![Track](https://img.shields.io/badge/Track-Investor%20Protection-2563EB?style=for-the-badge)](https://github.com/Astuti5/SEBI_Trust_Shield)
+[![Backend](https://img.shields.io/badge/Backend-FastAPI-009688?style=for-the-badge)](https://fastapi.tiangolo.com/)
+[![Language](https://img.shields.io/badge/Language-Python-3776AB?style=for-the-badge)](https://www.python.org/)
+
+**Securities Market TechSprint 2026**
+
+[🚀 Demo](#-demo) •
+[✨ Features](#-features) •
+[🏗️ Architecture](#️-architecture) •
+[🔐 Security](#-security) •
+[🧪 What's Implemented](#-whats-implemented) •
+[🛣️ Roadmap](#️-roadmap)
+
+</div>
+
 ---
 
-# ⚖️ What's Real vs Planned
+# 🎯 The Problem
 
-| Capability | Status |
-|---|---|
-| Domain similarity, SSL & WHOIS checks | ✅ Working |
-| SSRF protection | ✅ Working |
-| Rate limiting | ✅ Working |
-| Screenshot OCR | ✅ Working |
-| Scam-language detection | ✅ Working |
-| Brand impersonation detection | ✅ Working |
-| Explainable risk engine | ✅ Working |
-| Frontend verification console | ✅ Working |
-| QR verification | ⏳ Planned |
-| Registered intermediary verification | ⏳ Planned |
-| Digital authentication layer | ⏳ Designed |
-| Deepfake video detection | ⏳ Phase 2 |
-| PostgreSQL integration | ⏳ Planned |
+Financial scams are no longer limited to traditional phishing emails.
 
-The project intentionally separates **implemented functionality** from future capabilities.
+Investors can encounter:
+
+- 🎭 Synthetic and impersonated media
+- 🌐 Lookalike broker and financial websites
+- 📱 QR-based scams
+- 📸 Fraudulent screenshots
+- 💬 Urgent investment messages
+- 📢 Fake financial advertisements
+- 🏦 Impersonation of trusted financial institutions
+
+The challenge is not simply identifying whether an organization is legitimate.
+
+The real question is:
+
+> **"Can I trust this financial communication before I act on it?"**
+
+Existing verification workflows often require users to already know **what entity, account, or website they should verify**.
+
+**SEBI Trust Shield starts with the suspicious content itself.**
 
 ---
 
-# 🔐 Security
+# 🛡️ The Solution
 
-SEBI Trust Shield follows a security-first approach.
+**SEBI Trust Shield** is a security-first verification platform that analyzes suspicious financial content using multiple signals and produces an **explainable risk assessment**.
 
-### SSRF Protection
-
-Every user-supplied URL passes through a security layer before network requests.
-
-Protection includes:
-
-- Private IP blocking
-- Loopback address blocking
-- Link-local address blocking
-- Cloud metadata endpoint blocking
-- URL scheme validation
-- Port validation
-- DNS resolution checks
-
-### Rate Limiting
-
-The API uses a sliding-window rate limiter:
+Instead of relying on a single detection mechanism, the platform combines:
 
 ```text
-20 requests / 60 seconds
-per IP / endpoint
+URL / Screenshot
+       │
+       ▼
+Input Validation
+       │
+       ▼
+Security Controls
+       │
+       ├── SSRF Protection
+       ├── Upload Validation
+       └── Rate Limiting
+       │
+       ▼
+Detection Layer
+       │
+       ├── WHOIS
+       ├── SSL
+       ├── Domain Similarity
+       ├── OCR
+       ├── Scam Language
+       └── Impersonation Detection
+       │
+       ▼
+Explainable Risk Engine
+       │
+       ▼
+Low / Medium / High Risk
+       │
+       ▼
+Reasons + Recommended Action
+# 👥 Team
+
+**Team Recon**
+
+Astuti Kumari
+
+---
+
+<div align="center">
+
+### ⭐ Building trust in digital financial communications.
+
+*Prototype under active development.*
+
+</div>
